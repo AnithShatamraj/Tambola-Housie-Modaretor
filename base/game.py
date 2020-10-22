@@ -26,7 +26,7 @@ class Game:
         self.history.insert(0, self.pop)
         tab = np.reshape(self.popped, (10, 10)).tolist()
 
-        return self.pop, tab, self.history[1:6], len(self.nums) > 0
+        return self.pop, tab, self.history[1:11], len(self.nums) > 0
 
 
 def run():
@@ -57,9 +57,12 @@ def run():
                     end_game_window.close()
                 else:
                     break
-
             game_window.close()
-
+            if len(_game.history) > 0:
+                _game.history.reverse()
+                game_end_summary_win = layout_render.game_completed_window(_game.history)
+                game_end_summary_win.read()
+                game_end_summary_win.close()
         else:
             home_screen.close()
             break

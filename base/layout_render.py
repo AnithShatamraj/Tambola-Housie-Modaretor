@@ -41,147 +41,6 @@ def home_screen():
     )
 
     return window
-# Sg.Text('Click on New Game',
-#                     background_color='white',
-#                     text_color='black',
-#                     auto_size_text=True,
-#                     size=(500, 3),
-#                     justification='center',
-#                     font=('Helvetica', 15)
-#                     )
-
-
-def inprogress(pop, table, history):
-    layout = [
-        [
-            Sg.Column(
-                [
-                    [
-                        Sg.Text(
-                            'Number is: ',
-                            background_color='white',
-                            text_color='black',
-                            auto_size_text=True,
-                            justification='left',
-                            font=('Helvetica', 12),
-                            size=(10, 1)
-                        )
-                    ],
-                    [
-                        Sg.Text(
-                            str(pop),
-                            key='-POP-',
-                            background_color='white',
-                            text_color='green',
-                            auto_size_text=True,
-                            justification='center',
-                            font=('Helvetica', 50),
-                            size=(10, 1)
-                        ),
-                    ],
-                    [
-                        Sg.Text(
-                            'Last 5: ',
-                            background_color='white',
-                            text_color='black',
-                            auto_size_text=True,
-                            justification='left',
-                            font=('Helvetica', 12),
-                            size=(10, 1)
-                        ),
-                    ],
-                    [
-                        Sg.Text(
-                            ', '.join(history),
-                            key='-HIST-',
-                            background_color='white',
-                            text_color='red',
-                            auto_size_text=True,
-                            justification='left',
-                            font=('Helvetica', 15),
-                            size=(30, 1)
-                        )
-                    ],
-                ],
-                background_color='white',
-                size=(400, 200)
-            ),
-            Sg.Column(
-                [
-                    [
-                        Sg.Text(
-                            'Completed: ',
-                            background_color='white',
-                            text_color='black',
-                            auto_size_text=True,
-                            justification='left',
-                            font=('Helvetica', 20),
-                            pad=(10, 0)
-                        )
-                    ],
-                    [
-
-                        Sg.Table(
-                            table,
-                            headings=cols,
-                            key='-TAB-',
-                            background_color='white',
-                            text_color='#0b439e',
-                            font=('Helvetica', 15),
-                            justification='center',
-                            row_height=25
-                        )
-                    ]
-                ],
-                background_color='white'
-            )
-        ],
-
-        [
-            Sg.Button("Next"),
-            Sg.Button("Close")
-        ]
-    ]
-
-    window = Sg.Window(
-        f'Tambola',
-        layout,
-        background_color='white',
-        size=default_window_size
-    )
-
-    return window
-
-
-def comfirm_close():
-    layout = [
-        [
-            Sg.Text('Are you sure you want to end the game?',
-                    background_color='white',
-                    text_color='red',
-                    justification='center',
-                    size=(55, 1)
-                    )
-        ],
-        [
-            Sg.Text('Press "End Game" to End the game, Press "Continue" to keep playing',
-                    background_color='white',
-                    text_color='black',
-                    justification='center',
-                    size=(55, 1)
-                    )
-        ],
-        [
-            Sg.Button('Continue', size=(15, 1), pad=((90, 1), (0, 0))),
-            Sg.Button('End Game', size=(15, 1), pad=((10, 0), (0, 0)))
-        ]
-    ]
-    window = Sg.Window(
-        f'!!!Confirm End Game!!!',
-        layout,
-        background_color='white'
-    )
-    return window
 
 
 def game_window(pop, history):
@@ -267,26 +126,83 @@ def game_window(pop, history):
     return window
 
 
-def game_completed_window(history):
+def comfirm_close():
     layout = [
         [
-            Sg.Text('Game End', size=(50, 0), justification='center')
+            Sg.Text('Are you sure you want to end the game?',
+                    background_color='white',
+                    text_color='red',
+                    justification='center',
+                    size=(55, 1)
+                    )
         ],
         [
-            Sg.Text('Numbers were picked in foll0wing order', size=(50, 0), justification='center', font=('H'))
+            Sg.Text('Press "End Game" to End the game, Press "Continue" to keep playing',
+                    background_color='white',
+                    text_color='black',
+                    justification='center',
+                    size=(55, 1)
+                    )
         ],
         [
-            Sg.Text(", ".join(history), size=(50, 0), justification='center')
+            Sg.Button('Continue', size=(15, 1), pad=((90, 1), (0, 0))),
+            Sg.Button('End Game', size=(15, 1), pad=((10, 0), (0, 0)))
+        ]
+    ]
+    window = Sg.Window(
+        f'!!!Confirm End Game!!!',
+        layout,
+        background_color='white'
+    )
+    return window
+
+
+def game_completed_window(history):
+    n_rows = len(history) // 10
+    rem = len(history) % 10
+    padding = 10 if n_rows > 1 else 10-rem
+    def get_hist_text(num):
+        return f'{num}' if num > 9 else f'0{num}'
+    table = [
+        [
+            Sg.Text(
+                get_hist_text(history[i+j]), text_color='blue',
+                background_color='white',
+                font=('Helvetica', 12)
+            ) for j in range(0, 10)
+        ]
+        for i in range(0, n_rows*10, 10)
+    ]
+    remider_row = [
+        Sg.Text(
+            get_hist_text(history[i]), text_color='blue',
+            background_color='white',
+            font=('Helvetica', 12)
+        )
+        for i in range(n_rows*10, n_rows*10+rem)
+    ]
+    table.append(remider_row)
+    layout = [
+        [
+            Sg.Text('Game End', size=(50, 0), justification='center', font=('Helvetica', 15))
         ],
         [
-            Sg.Button('Close', pad=((186, 0), (0, 0)))
+            Sg.Text('Numbers were picked in following order', size=(50, 0),
+                    justification='center', font=('Helvetica', 15))
+        ],
+        [
+            Sg.Frame(None, table, element_justification='center', pad=((120, 0), (0, 0)))
+        ],
+        [
+            Sg.Button('Close', pad=((260, 0), (0, 0)))
         ]
     ]
     return Sg.Window('Completed', layout, disable_close=True)
 
+
 if __name__ == '__main__':
     i = 0
-    win = game_completed_window(['10', '20'])
+    win = game_completed_window(list(range(0, 25)))
     event, value = win.read()
 
     win.close()
