@@ -1,7 +1,7 @@
-import base.game as game
-
+from windows.home_screen import HomeScreen
 
 if __name__ == '__main__':
-    game.run()
+    HomeScreen().run()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
