@@ -6,7 +6,7 @@ class Game:
     def __init__(self, name='My Games'):
         self.id = id
         self.name = name
-        self.nums = list(range(0, 100))
+        self.nums = list(range(1, 91))
         self.pop = 0
         self.history = []
 

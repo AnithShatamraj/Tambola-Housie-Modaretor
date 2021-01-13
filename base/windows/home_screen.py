@@ -2,6 +2,7 @@ import PySimpleGUI as Sg
 from windows.settings_window import SettingsWindow
 from windows.game_window import GameWindow
 from settings import Settings
+from windows import ICON_FILE, HOME_IMG_FILE
 
 KEY_SETTINGS = '-settings-'
 
@@ -17,6 +18,13 @@ class HomeScreen:
     @staticmethod
     def home_screen():
         layout = [
+            # [
+            #     Sg.Image(
+            #         HOME_IMG_FILE,
+            #         background_color='#e3e3e3',
+            #
+            #     )
+            # ],
             [
                 Sg.Text('Welcome to Tambola House',
                         background_color='#e3e3e3',
@@ -47,7 +55,9 @@ class HomeScreen:
             background_color='#e3e3e3',
             element_justification='center',
             text_justification='center',
-            disable_close=True
+            disable_close=True,
+            icon=ICON_FILE,
+            resizable=True
         )
 
         return window

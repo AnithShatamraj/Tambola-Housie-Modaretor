@@ -3,6 +3,7 @@ from windows.settings_window import SettingsWindow
 from windows.end_game_prompt import EndGamePrompt
 from windows.view_order import ViewOrder
 from windows.validate_ticket import ValidateTicket
+from windows import FAST_VOICE_DIR, SLOW_VOICE_DIR, BELL_SOUND_FILE
 from game import Game
 from pygame import mixer
 from helpers.layout_helpers import table_of_numbers
@@ -26,6 +27,8 @@ KEY_HIST_HEAD = '-histhead-'
 KEY_HIST = '-HIST-'
 
 KEY_NEXTNUM = '-nxtnum-'
+
+KEY_AUTO_PLAY = '-autoplay-'
 
 KEY_ENDGAME = '-endgame-'
 
@@ -68,17 +71,6 @@ class GameWindow:
 
     @staticmethod
     def game_window(numbers):
-        # table = [
-        #     [
-        #         Sg.Text(
-        #             f'{i}{j}', text_color='#8d39fa',
-        #             background_color='#d6d6d6',
-        #             key=f'-{i}{j}-',
-        #             font=('Helvetica', 16)
-        #         ) for j in range(0, 10)
-        #     ]
-        #     for i in range(0, 10)
-        # ]
 
         table = table_of_numbers(
             numbers,
@@ -95,7 +87,7 @@ class GameWindow:
                     [
                         Sg.Text('Completed: 00', justification='left', font=('Helvetica', 12), pad=((0, 130), (0, 0)),
                                 background_color='white', text_color='#ff5703', key=KEY_COMPLETED, size=(12, 0)),
-                        Sg.Text('Remaining: 100', justification='left', font=('Helvetica', 12),
+                        Sg.Text(f'Remaining: {len(numbers)}', justification='left', font=('Helvetica', 12),
                                 background_color='white',
                                 text_color='#7bc708', key=KEY_REMAINING, size=(12, 0))
                     ]
@@ -171,6 +163,9 @@ class GameWindow:
                 Sg.Button('Start', size=(15, 1), key=KEY_NEXTNUM, button_color=('white', '#05a354'),
                           focus=True, border_width=0, disabled_button_color=('white', '#9effcf'),
                           pad=((10, 0), (70, 0))),
+                Sg.Button('Auto Play', size=(15, 1), key=KEY_AUTO_PLAY, button_color=('white', '#05a354'),
+                          focus=True, border_width=0, disabled_button_color=('white', '#9effcf'),
+                          pad=((10, 0), (70, 0))),
                 Sg.Button('End Game', size=(15, 1), pad=((22, 0), (70, 0)), focus=False,
                           button_color=('white', '#c70000'), border_width=0, key=KEY_ENDGAME)
             ]
@@ -191,7 +186,10 @@ class GameWindow:
             'Tambola House', layout,
             size=default_window_size, disable_close=True,
             background_color='white',
-            element_justification='right'
+            element_justification='center',
+            resizable=True,
+            text_justification='right'
+
         )
         return window
 
@@ -219,32 +217,55 @@ class GameWindow:
                 ViewOrder(self.game.history).view_order()
             elif event == KEY_VAL_TICKET:
                 ValidateTicket(self.game.history).validate()
+            elif event == KEY_AUTO_PLAY:
+                self.auto_play()
 
         self.window.close()
         return self.settings
 
-    @staticmethod
-    def blink_text(window, text_element, n_times=4, new_value=None, background_color='white', text_color='#8d39fa'):
+    def disable_enable_autoplay_buttons(self, disable=True):
+        self.window[KEY_NEXTNUM].update(disabled=disable)
+        self.window[KEY_ENDGAME].update(disabled=disable)
+        self.window[KEY_VIEW_ORDER].update(disabled=disable)
+        self.window[KEY_VAL_TICKET].update(disabled=disable)
+
+    def auto_play(self):
+        self.window[KEY_AUTO_PLAY].update('Pause')
+        self.disable_enable_autoplay_buttons()
+        while True:
+            event, value = self.window.read(1500)
+
+            if event == KEY_AUTO_PLAY:
+                break
+            else:
+                self.update_game()
+                self.disable_enable_autoplay_buttons()
+
+        self.disable_enable_autoplay_buttons(False)
+        self.window[KEY_AUTO_PLAY].update('Auto Play')
+
+    def blink_text(self, key, n_times=4, new_value=None, background_color='white', text_color='#8d39fa'):
+        text_element = self.window[key]
         if new_value is not None:
             text_element.update(new_value)
 
         for i in range(0, n_times):
             text_element.update(text_color=background_color, background_color=text_color)
-            window.read(timeout=100)
+            self.window.read(timeout=100)
             text_element.update(text_color=text_color, background_color=background_color)
-            window.read(timeout=100)
+            self.window.read(timeout=100)
 
     def read_number(self, number):
         if self.settings.read:
             mixer.init()
-            folder = 'audio/numbers-slow' if self.settings.read_slow else 'audio/numbers-fast'
-            mixer.music.load(f'{folder}/{number}.mp3')
+            folder = SLOW_VOICE_DIR if self.settings.read_slow else FAST_VOICE_DIR
+            mixer.music.load(f'{str(folder)}/{number}.mp3')
             mixer.music.play()
 
     def make_sound(self):
         if self.settings.sound:
             mixer.init()
-            mixer.music.load(f'audio/bell.mp3')
+            mixer.music.load(str(BELL_SOUND_FILE))
             mixer.music.play()
 
     def update_game(self):
@@ -261,15 +282,15 @@ class GameWindow:
             self.window[KEY_HIST].update(last_10_numbers)
         pop_key = f'{pop}' if pop > 9 else f'0{pop}'
 
-        self.blink_text(self.window, self.window[KEY_POP], new_value=str(pop), background_color='#e3e3e3',
+        self.blink_text(KEY_POP, new_value=str(pop), background_color='#e3e3e3',
                         text_color=random.choice(colors))
         if self.settings.read:
             self.read_number(pop_key)
 
-        self.blink_text(self.window, self.window[f'-{pop_key}-'], background_color='#8d39fa', text_color='white')
+        self.blink_text(f'-{pop_key}-', background_color='#8d39fa', text_color='white')
 
         self.window[KEY_COMPLETED].update(f'Completed: {len(self.game.history)}')
-        self.window[KEY_REMAINING].update(f'Remaining: {100 - len(self.game.history)}')
+        self.window[KEY_REMAINING].update(f'Remaining: {90 - len(self.game.history)}')
         if self.settings.read:
             time.sleep(1)
         self.window[KEY_NEXTNUM].update(disabled=False)
